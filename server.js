@@ -1,145 +1,160 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+
+// ── Load .env for local dev ──
+try {
+  const envPath = path.join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    const lines = fs.readFileSync(envPath, 'utf-8').split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#')) {
+        const idx = trimmed.indexOf('=');
+        if (idx > 0) {
+          const key = trimmed.slice(0, idx).trim();
+          const val = trimmed.slice(idx + 1).trim();
+          if (!process.env[key]) process.env[key] = val;
+        }
+      }
+    }
+  }
+} catch (e) { /* ignore */ }
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
+const CONFIG_FILE = path.join(__dirname, 'event-config.json');
+
+// ── Supabase ──
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
 
 app.use(express.json());
 app.use(express.static(PUBLIC_DIR));
 
-const DATA_DIR = path.join(__dirname, 'data');
-const DATA_FILE = path.join(DATA_DIR, 'responses.json');
-const CONFIG_FILE = path.join(__dirname, 'event-config.json');
-
-// Ensure data directory and file exist
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]', 'utf-8');
-
-// Startup diagnostics
-console.log('--- Startup Diagnostics ---');
-console.log('__dirname:', __dirname);
-console.log('PUBLIC_DIR:', PUBLIC_DIR);
+// ── Startup diagnostics ──
+console.log('--- Startup ---');
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'set' : 'MISSING');
+console.log('SUPABASE_KEY:', process.env.SUPABASE_KEY ? 'set' : 'MISSING');
 console.log('PUBLIC_DIR exists:', fs.existsSync(PUBLIC_DIR));
-if (fs.existsSync(PUBLIC_DIR)) {
-  console.log('PUBLIC_DIR contents:', fs.readdirSync(PUBLIC_DIR));
-}
-console.log('CONFIG_FILE exists:', fs.existsSync(CONFIG_FILE));
-console.log('DATA_FILE exists:', fs.existsSync(DATA_FILE));
-console.log('---------------------------');
+console.log('---------------');
 
-// Helper: read responses
-function readResponses() {
-  try {
-    const data = fs.readFileSync(DATA_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-// Helper: write responses
-function writeResponses(responses) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(responses, null, 2), 'utf-8');
-}
-
-// Helper: read event config
+// ── Helpers ──
 function readConfig() {
-  const data = fs.readFileSync(CONFIG_FILE, 'utf-8');
-  return JSON.parse(data);
+  return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
 }
 
-// GET /api/health — health check
-app.get('/api/health', (req, res) => {
+// ── API Routes ──
+
+// Health check
+app.get('/api/health', async (req, res) => {
+  const { data, error } = await supabase.from('responses').select('id', { count: 'exact', head: true });
   res.json({
-    status: 'ok',
+    status: error ? 'db_error' : 'ok',
+    dbConnected: !error,
     publicDir: fs.existsSync(PUBLIC_DIR),
-    publicFiles: fs.existsSync(PUBLIC_DIR) ? fs.readdirSync(PUBLIC_DIR) : [],
-    configExists: fs.existsSync(CONFIG_FILE)
+    error: error ? error.message : null
   });
 });
 
-// GET /api/event — return event info
+// Event info
 app.get('/api/event', (req, res) => {
   try {
-    const config = readConfig();
-    res.json(config);
+    res.json(readConfig());
   } catch (err) {
     res.status(500).json({ error: '無法讀取活動資訊' });
   }
 });
 
-// GET /api/responses — return all RSVP responses (for admin)
-app.get('/api/responses', (req, res) => {
-  const responses = readResponses();
+// Get all responses
+app.get('/api/responses', async (req, res) => {
+  const { data, error } = await supabase
+    .from('responses')
+    .select('*')
+    .order('submitted_at', { ascending: true });
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  const responses = data || [];
   const attending = responses.filter(r => r.attending);
   const notAttending = responses.filter(r => !r.attending);
+
   res.json({
     total: responses.length,
     attendingCount: attending.length,
     notAttendingCount: notAttending.length,
-    responses
+    responses: responses.map(r => ({
+      id: r.id,
+      name: r.name,
+      studentId: r.student_id,
+      attending: r.attending,
+      dietaryNotes: r.dietary_notes,
+      submittedAt: r.submitted_at
+    }))
   });
 });
 
-// POST /api/rsvp — submit an RSVP
-app.post('/api/rsvp', (req, res) => {
+// Submit RSVP
+app.post('/api/rsvp', async (req, res) => {
   const { name, studentId, attending, dietaryNotes } = req.body;
 
   if (!name || !name.trim()) {
     return res.status(400).json({ error: '請填寫姓名' });
   }
 
-  const responses = readResponses();
-
-  // Check if this student already responded (by name + studentId)
-  const existingIdx = responses.findIndex(
-    r => r.name === name.trim() && r.studentId === (studentId || '').trim()
-  );
-
-  const entry = {
+  const row = {
     name: name.trim(),
-    studentId: (studentId || '').trim(),
+    student_id: (studentId || '').trim(),
     attending: !!attending,
-    dietaryNotes: (dietaryNotes || '').trim(),
-    submittedAt: new Date().toISOString()
+    dietary_notes: (dietaryNotes || '').trim(),
+    submitted_at: new Date().toISOString()
   };
 
-  if (existingIdx >= 0) {
-    responses[existingIdx] = entry;
-  } else {
-    responses.push(entry);
-  }
+  // Upsert: update if same name + student_id exists
+  const { data, error } = await supabase
+    .from('responses')
+    .upsert(row, { onConflict: 'name, student_id' })
+    .select();
 
-  writeResponses(responses);
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
 
   res.json({
     success: true,
-    message: attending ? '已確認出席，期待見到你！🎉' : '已收到你的回覆，下次再聚！',
-    entry
+    message: attending
+      ? '已確認出席，期待見到你！'
+      : '已收到你的回覆，下次再聚！'
   });
 });
 
-// DELETE /api/responses/:index — delete a response (admin)
-app.delete('/api/responses/:index', (req, res) => {
-  const responses = readResponses();
-  const idx = parseInt(req.params.index, 10);
-  if (idx < 0 || idx >= responses.length) {
-    return res.status(404).json({ error: '找不到該筆回覆' });
+// Delete a response by ID
+app.delete('/api/responses/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  const { error } = await supabase
+    .from('responses')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
   }
-  responses.splice(idx, 1);
-  writeResponses(responses);
+
   res.json({ success: true });
 });
 
-// Fallback: serve index.html for root
+// Fallback: serve index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🍽️  導生宴 RSVP 系統已啟動`);
-  console.log(`📋 學生頁面: http://localhost:${PORT}`);
-  console.log(`📊 管理後台: http://localhost:${PORT}/admin.html`);
+  console.log(`導生宴 RSVP 系統已啟動 → http://localhost:${PORT}`);
 });
