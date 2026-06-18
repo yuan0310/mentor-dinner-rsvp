@@ -1,16 +1,15 @@
 {
   "title": "114 學年度導生宴",
   "subtitle": "期末聚餐，感謝大家這學期的努力！",
-  "date": "2026-07-05",
-  "time": "18:00",
-  "restaurant": "饗食天堂（台北信義店）",
-  "address": "台北市信義區松壽路 22 號 4 樓",
-  "mapUrl": "https://maps.google.com/?q=饗食天堂+台北信義店",
-  "budgetNote": "由導師經費支出，同學免費參加",
-  "dresscode": "輕鬆自在即可",
-  "deadline": "2026-06-30",
-  "contactName": "王老師",
-  "contactEmail": "wang@university.edu.tw",
+  "date": "2026-06-28",
+  "time": "19:00",
+  "restaurant": "吐司利亞三號-敦南店",
+  "address": "106臺北市大安區建安里敦化南路一段169巷3號",
+  "mapUrl": "https://maps.app.goo.gl/Akre78GA245GctoUA",
+  
+  "deadline": "2026-06-20",
+  "contactName": "正源",
+  "contactEmail": "yuan0310@gmail.com",
   "maxGuests": 30,
   "notes": "如有飲食禁忌（素食、過敏等），請在備註欄填寫。"
 }
