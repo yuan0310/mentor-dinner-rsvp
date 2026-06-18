@@ -6,258 +6,33 @@
   <title>導生宴 RSVP — 管理後台</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
-  <style>
-    /* ── Admin-specific styles ── */
-    .page-container {
-      max-width: 800px;
-    }
-
-    .admin-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 32px;
-      animation: fadeInDown 0.5s ease-out;
-    }
-
-    .admin-nav a {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--color-text-secondary);
-      text-decoration: none;
-      font-size: 14px;
-      padding: 8px 14px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--color-border);
-      transition: all var(--transition-fast);
-    }
-
-    .admin-nav a:hover {
-      border-color: var(--color-border-hover);
-      color: var(--color-text);
-    }
-
-    .btn-refresh {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      background: var(--color-surface-elevated);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      color: var(--color-text-secondary);
-      font-family: var(--font-body);
-      font-size: 13px;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-    }
-
-    .btn-refresh:hover {
-      border-color: var(--color-primary);
-      color: var(--color-primary-light);
-    }
-
-    .btn-refresh.spinning .refresh-icon {
-      animation: spin 0.6s linear infinite;
-    }
-
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      margin-bottom: 28px;
-    }
-
-    .summary-card {
-      text-align: center;
-      padding: 20px 12px;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      animation: fadeInUp 0.5s ease-out both;
-    }
-
-    .summary-card:nth-child(1) { animation-delay: 0.05s; }
-    .summary-card:nth-child(2) { animation-delay: 0.1s; }
-    .summary-card:nth-child(3) { animation-delay: 0.15s; }
-
-    .summary-card .num {
-      font-family: var(--font-display);
-      font-size: 36px;
-      font-weight: 700;
-      line-height: 1;
-      margin-bottom: 6px;
-    }
-
-    .summary-card:nth-child(1) .num { color: var(--color-primary); }
-    .summary-card:nth-child(2) .num { color: var(--color-success); }
-    .summary-card:nth-child(3) .num { color: var(--color-danger); }
-
-    .summary-card .label {
-      font-size: 12px;
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* ── Response Table ── */
-    .response-table-wrap {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .response-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-    }
-
-    .response-table th,
-    .response-table td {
-      text-align: left;
-      padding: 12px 14px;
-      font-size: 14px;
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .response-table th {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      position: sticky;
-      top: 0;
-      background: var(--color-surface);
-      z-index: 1;
-    }
-
-    .response-table tbody tr {
-      transition: background var(--transition-fast);
-    }
-
-    .response-table tbody tr:hover {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    .response-table .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 10px;
-      border-radius: 100px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .status-badge.attending {
-      background: var(--color-success-bg);
-      color: var(--color-success);
-      border: 1px solid rgba(92, 191, 138, 0.2);
-    }
-
-    .status-badge.not-attending {
-      background: var(--color-danger-bg);
-      color: var(--color-danger);
-      border: 1px solid rgba(224, 98, 110, 0.2);
-    }
-
-    .btn-delete {
-      background: none;
-      border: 1px solid transparent;
-      color: var(--color-text-muted);
-      font-size: 16px;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: var(--radius-sm);
-      transition: all var(--transition-fast);
-    }
-
-    .btn-delete:hover {
-      color: var(--color-danger);
-      border-color: rgba(224, 98, 110, 0.2);
-      background: var(--color-danger-bg);
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 48px 24px;
-      color: var(--color-text-muted);
-    }
-
-    .empty-state .empty-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
-    }
-
-    .empty-state p {
-      font-size: 15px;
-    }
-
-    .time-cell {
-      font-size: 12px;
-      color: var(--color-text-muted);
-    }
-
-    .notes-cell {
-      max-width: 160px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      color: var(--color-text-secondary);
-      font-size: 13px;
-    }
-
-    @media (max-width: 600px) {
-      .summary-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-      }
-
-      .summary-card .num {
-        font-size: 28px;
-      }
-
-      .response-table th,
-      .response-table td {
-        padding: 10px 10px;
-        font-size: 13px;
-      }
-    }
-  </style>
 </head>
-<body>
+<body class="admin-page">
 
-  <div class="ambient-bg">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-  </div>
-
-  <div class="page-container">
+  <div class="page">
 
     <!-- Nav -->
     <nav class="admin-nav">
       <a href="/">← 學生頁面</a>
       <button class="btn-refresh" id="btn-refresh" type="button">
-        <span class="refresh-icon">🔄</span>
-        重新整理
+        <span class="ri">↻</span> 重新整理
       </button>
     </nav>
 
     <!-- Hero -->
     <header class="hero">
-      <div class="hero-badge">
-        <span class="dot"></span>
-        <span>管理後台</span>
+      <div class="top-ornament">
+        <span class="line"></span>
+        <span class="diamond"></span>
+        <span class="line"></span>
       </div>
+      <p class="hero-eyebrow">Admin</p>
       <h1 class="hero-title">回覆總覽</h1>
       <p class="hero-subtitle">查看所有學生的出席回覆</p>
     </header>
 
     <!-- Summary -->
-    <div class="summary-grid" id="summary-grid">
+    <div class="summary-grid">
       <div class="summary-card">
         <div class="num" id="sum-total">0</div>
         <div class="label">已回覆</div>
@@ -273,9 +48,9 @@
     </div>
 
     <!-- Table -->
-    <section class="card" style="padding: 0; overflow: hidden;">
-      <div class="response-table-wrap">
-        <table class="response-table" id="response-table">
+    <div class="table-card">
+      <div class="table-wrap">
+        <table class="resp-table" id="resp-table">
           <thead>
             <tr>
               <th>#</th>
@@ -283,100 +58,78 @@
               <th>學號</th>
               <th>出席</th>
               <th>備註</th>
-              <th>回覆時間</th>
+              <th>時間</th>
               <th></th>
             </tr>
           </thead>
-          <tbody id="table-body">
-          </tbody>
+          <tbody id="tbody"></tbody>
         </table>
       </div>
-      <div class="empty-state" id="empty-state" style="display: none;">
-        <div class="empty-icon">📭</div>
-        <p>還沒有收到任何回覆</p>
+      <div class="empty-state" id="empty" style="display:none;">
+        <div class="empty-icon">—</div>
+        <p>尚未收到任何回覆</p>
       </div>
-    </section>
+    </div>
 
-    <footer class="page-footer">
+    <footer class="footer">
       <p>導生宴 RSVP 管理系統</p>
     </footer>
 
   </div>
 
   <script>
-    const tableBody = document.getElementById('table-body');
-    const emptyState = document.getElementById('empty-state');
+    const tbody = document.getElementById('tbody');
+    const empty = document.getElementById('empty');
     const refreshBtn = document.getElementById('btn-refresh');
 
-    async function loadData() {
+    async function load() {
       refreshBtn.classList.add('spinning');
       try {
         const res = await fetch('/api/responses');
-        const data = await res.json();
+        const d = await res.json();
 
-        // Summary
-        document.getElementById('sum-total').textContent = data.total;
-        document.getElementById('sum-yes').textContent = data.attendingCount;
-        document.getElementById('sum-no').textContent = data.notAttendingCount;
+        document.getElementById('sum-total').textContent = d.total;
+        document.getElementById('sum-yes').textContent = d.attendingCount;
+        document.getElementById('sum-no').textContent = d.notAttendingCount;
 
-        // Table
-        if (data.responses.length === 0) {
-          tableBody.innerHTML = '';
-          emptyState.style.display = 'block';
+        if (!d.responses.length) {
+          tbody.innerHTML = '';
+          empty.style.display = 'block';
         } else {
-          emptyState.style.display = 'none';
-          tableBody.innerHTML = data.responses.map((r, i) => {
-            const time = new Date(r.submittedAt);
-            const timeStr = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
-            return `
-              <tr>
-                <td style="color: var(--color-text-muted);">${i + 1}</td>
-                <td><strong>${escapeHTML(r.name)}</strong></td>
-                <td style="color: var(--color-text-secondary);">${escapeHTML(r.studentId || '—')}</td>
-                <td>
-                  <span class="status-badge ${r.attending ? 'attending' : 'not-attending'}">
-                    ${r.attending ? '✓ 出席' : '✗ 不出席'}
-                  </span>
-                </td>
-                <td class="notes-cell" title="${escapeHTML(r.dietaryNotes || '')}">${escapeHTML(r.dietaryNotes || '—')}</td>
-                <td class="time-cell">${timeStr}</td>
-                <td>
-                  <button class="btn-delete" onclick="deleteResponse(${i})" title="刪除此筆回覆">🗑</button>
-                </td>
-              </tr>
-            `;
+          empty.style.display = 'none';
+          tbody.innerHTML = d.responses.map((r, i) => {
+            const t = new Date(r.submittedAt);
+            const ts = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+            return `<tr>
+              <td class="idx-cell">${i+1}</td>
+              <td><strong>${esc(r.name)}</strong></td>
+              <td style="color:var(--text-secondary)">${esc(r.studentId||'—')}</td>
+              <td><span class="badge ${r.attending?'yes':'no'}">${r.attending?'✓ 出席':'✗ 不出席'}</span></td>
+              <td class="notes-cell" title="${esc(r.dietaryNotes||'')}">${esc(r.dietaryNotes||'—')}</td>
+              <td class="time-cell">${ts}</td>
+              <td><button class="btn-del" onclick="del(${i})" title="刪除">✕</button></td>
+            </tr>`;
           }).join('');
         }
-      } catch (err) {
-        console.error('Failed to load data:', err);
-      } finally {
-        setTimeout(() => refreshBtn.classList.remove('spinning'), 400);
-      }
+      } catch (e) { console.error(e); }
+      finally { setTimeout(() => refreshBtn.classList.remove('spinning'), 300); }
     }
 
-    async function deleteResponse(index) {
-      if (!confirm('確定要刪除這筆回覆嗎？')) return;
-      try {
-        await fetch(`/api/responses/${index}`, { method: 'DELETE' });
-        await loadData();
-      } catch (err) {
-        alert('刪除失敗');
-      }
+    async function del(i) {
+      if (!confirm('確定刪除？')) return;
+      await fetch(`/api/responses/${i}`, { method: 'DELETE' });
+      load();
     }
 
-    function escapeHTML(str) {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
+    function esc(s) {
+      const el = document.createElement('div');
+      el.textContent = s;
+      return el.innerHTML;
     }
 
-    refreshBtn.addEventListener('click', loadData);
-
-    // Initial load
-    loadData();
-
-    // Auto-refresh every 30 seconds
-    setInterval(loadData, 30000);
+    refreshBtn.addEventListener('click', load);
+    load();
+    setInterval(load, 30000);
   </script>
 </body>
 </html>
