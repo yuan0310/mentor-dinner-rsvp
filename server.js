@@ -4,9 +4,10 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const PUBLIC_DIR = path.join(__dirname, 'public');
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(PUBLIC_DIR));
 
 const DATA_DIR = path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'responses.json');
@@ -15,6 +16,18 @@ const CONFIG_FILE = path.join(__dirname, 'event-config.json');
 // Ensure data directory and file exist
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]', 'utf-8');
+
+// Startup diagnostics
+console.log('--- Startup Diagnostics ---');
+console.log('__dirname:', __dirname);
+console.log('PUBLIC_DIR:', PUBLIC_DIR);
+console.log('PUBLIC_DIR exists:', fs.existsSync(PUBLIC_DIR));
+if (fs.existsSync(PUBLIC_DIR)) {
+  console.log('PUBLIC_DIR contents:', fs.readdirSync(PUBLIC_DIR));
+}
+console.log('CONFIG_FILE exists:', fs.existsSync(CONFIG_FILE));
+console.log('DATA_FILE exists:', fs.existsSync(DATA_FILE));
+console.log('---------------------------');
 
 // Helper: read responses
 function readResponses() {
@@ -36,6 +49,16 @@ function readConfig() {
   const data = fs.readFileSync(CONFIG_FILE, 'utf-8');
   return JSON.parse(data);
 }
+
+// GET /api/health — health check
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    publicDir: fs.existsSync(PUBLIC_DIR),
+    publicFiles: fs.existsSync(PUBLIC_DIR) ? fs.readdirSync(PUBLIC_DIR) : [],
+    configExists: fs.existsSync(CONFIG_FILE)
+  });
+});
 
 // GET /api/event — return event info
 app.get('/api/event', (req, res) => {
@@ -110,7 +133,12 @@ app.delete('/api/responses/:index', (req, res) => {
   res.json({ success: true });
 });
 
-app.listen(PORT, () => {
+// Fallback: serve index.html for root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+});
+
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🍽️  導生宴 RSVP 系統已啟動`);
   console.log(`📋 學生頁面: http://localhost:${PORT}`);
   console.log(`📊 管理後台: http://localhost:${PORT}/admin.html`);
