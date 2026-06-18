@@ -6,7 +6,6 @@
   <meta name="description" content="導生宴活動邀請 — 請回覆是否出席">
   <title>導生宴 RSVP</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
 </head>
 <body>
 
@@ -28,7 +27,6 @@
 
     <!-- Deadline -->
     <div class="notice" id="notice-deadline">
-      <span class="notice-icon">◷</span>
       <span>回覆截止：<strong id="deadline-text">—</strong></span>
     </div>
 
@@ -121,14 +119,14 @@
               <label class="choice">
                 <input type="radio" name="attending" value="yes" required>
                 <div class="choice-face">
-                  <span class="emoji">🙋‍♂️</span>
+                  <span class="choice-symbol">○</span>
                   <span class="text">我要參加</span>
                 </div>
               </label>
               <label class="choice">
                 <input type="radio" name="attending" value="no">
                 <div class="choice-face">
-                  <span class="emoji">🙅‍♂️</span>
+                  <span class="choice-symbol">×</span>
                   <span class="text">無法參加</span>
                 </div>
               </label>
@@ -142,7 +140,6 @@
           </div>
 
           <div class="hint" id="hint-box" style="display:none;">
-            <span class="hint-icon">💡</span>
             <span id="hint-text"></span>
           </div>
 
@@ -154,7 +151,7 @@
 
         <!-- Result -->
         <div class="result" id="result">
-          <div class="result-icon" id="result-icon">🎉</div>
+          <div class="result-symbol" id="result-symbol">✓</div>
           <div class="result-title" id="result-title">已收到回覆</div>
           <div class="result-desc" id="result-desc"></div>
           <button class="btn-ghost" id="btn-reset" type="button">← 修改回覆</button>

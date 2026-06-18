@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupForm();
 });
 
-// ── State ──
 let eventData = null;
 let countdownTimer = null;
 
@@ -23,32 +22,29 @@ async function loadEvent() {
 }
 
 function render(ev) {
-  // Hero
   document.getElementById('hero-title').textContent = ev.title || '導生宴';
   document.getElementById('hero-subtitle').textContent = ev.subtitle || '';
 
-  // Deadline
   if (ev.deadline) {
     document.getElementById('deadline-text').textContent = fmtDate(ev.deadline);
   }
 
-  // Detail rows
+  // Detail rows — no emoji, just clean label/value
   const rows = [];
-  if (ev.date)       rows.push({ icon: '📅', label: '日期', value: fmtDate(ev.date) });
-  if (ev.time)       rows.push({ icon: '🕕', label: '時間', value: ev.time });
-  if (ev.restaurant) rows.push({ icon: '🍴', label: '餐廳', value: ev.restaurant });
+  if (ev.date)       rows.push({ label: '日期', value: fmtDate(ev.date) });
+  if (ev.time)       rows.push({ label: '時間', value: ev.time });
+  if (ev.restaurant) rows.push({ label: '餐廳', value: ev.restaurant });
   if (ev.address) {
     const val = ev.mapUrl
       ? `<a href="${esc(ev.mapUrl)}" target="_blank" rel="noopener">${esc(ev.address)}</a>`
       : esc(ev.address);
-    rows.push({ icon: '📍', label: '地點', value: val, html: true });
+    rows.push({ label: '地點', value: val, html: true });
   }
-  if (ev.budgetNote) rows.push({ icon: '💴', label: '費用', value: ev.budgetNote });
-  if (ev.dresscode)  rows.push({ icon: '👕', label: '服裝', value: ev.dresscode });
+  if (ev.budgetNote) rows.push({ label: '費用', value: ev.budgetNote });
+  if (ev.dresscode)  rows.push({ label: '服裝', value: ev.dresscode });
 
   document.getElementById('detail-list').innerHTML = rows.map(r => `
     <div class="detail-row">
-      <div class="icon">${r.icon}</div>
       <div class="content">
         <div class="label">${r.label}</div>
         <div class="value">${r.html ? r.value : esc(r.value)}</div>
@@ -56,13 +52,11 @@ function render(ev) {
     </div>
   `).join('');
 
-  // Hint
   if (ev.notes) {
     document.getElementById('hint-text').textContent = ev.notes;
-    document.getElementById('hint-box').style.display = 'flex';
+    document.getElementById('hint-box').style.display = 'block';
   }
 
-  // Contact
   if (ev.contactName) {
     const el = document.getElementById('contact-link');
     el.textContent = ev.contactName;
@@ -146,7 +140,7 @@ function setupForm() {
       if (data.success) {
         form.style.display = 'none';
         resultEl.classList.add('show');
-        document.getElementById('result-icon').textContent = attending ? '🎉' : '📝';
+        document.getElementById('result-symbol').textContent = attending ? '✓' : '—';
         document.getElementById('result-title').textContent = attending
           ? '太好了，期待見到你！'
           : '已收到你的回覆';
