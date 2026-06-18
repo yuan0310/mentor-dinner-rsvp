@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="導生宴活動回覆表單 — 請回覆是否能參加聚餐">
+  <title>導生宴 RSVP</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+</head>
+<body>
+
+  <!-- Ambient Background -->
+  <div class="ambient-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="page-container">
+
+    <!-- Hero -->
+    <header class="hero">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        <span>開放回覆中</span>
+      </div>
+      <h1 class="hero-title" id="event-title">導生宴</h1>
+      <p class="hero-subtitle" id="event-subtitle">載入中...</p>
+    </header>
+
+    <!-- Deadline Banner -->
+    <div class="deadline-banner" id="deadline-banner">
+      <span class="icon">⏰</span>
+      <span>回覆截止日：<strong id="deadline-text">—</strong></span>
+    </div>
+
+    <!-- Event Details Card -->
+    <section class="card" id="event-details-card" style="animation-delay: 0.05s;">
+      <div class="card-header">
+        <div class="card-icon">📋</div>
+        <h2 class="card-title">活動資訊</h2>
+      </div>
+      <div class="detail-list" id="detail-list">
+        <!-- Filled by JS -->
+      </div>
+      <div class="countdown-bar" id="countdown-bar">
+        <div class="countdown-unit">
+          <span class="countdown-number" id="cd-days">—</span>
+          <span class="countdown-label">天</span>
+        </div>
+        <div class="countdown-unit">
+          <span class="countdown-number" id="cd-hours">—</span>
+          <span class="countdown-label">時</span>
+        </div>
+        <div class="countdown-unit">
+          <span class="countdown-number" id="cd-mins">—</span>
+          <span class="countdown-label">分</span>
+        </div>
+        <div class="countdown-unit">
+          <span class="countdown-number" id="cd-secs">—</span>
+          <span class="countdown-label">秒</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RSVP Stats -->
+    <section class="card" id="stats-card" style="animation-delay: 0.12s;">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <h2 class="card-title">目前回覆狀況</h2>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-number" id="stat-attending">0</span>
+          <span class="stat-label">出席</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="stat-not-attending">0</span>
+          <span class="stat-label">無法出席</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="stat-total">0</span>
+          <span class="stat-label">已回覆</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RSVP Form Card -->
+    <section class="card" id="rsvp-card" style="animation-delay: 0.2s;">
+      <div class="card-header">
+        <div class="card-icon">✉️</div>
+        <h2 class="card-title">回覆出席</h2>
+      </div>
+
+      <form id="rsvp-form">
+        <div class="form-group">
+          <label class="form-label" for="input-name">
+            姓名 <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="input-name"
+            class="form-input"
+            placeholder="請輸入你的姓名"
+            required
+            autocomplete="name"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="input-student-id">
+            學號
+          </label>
+          <input
+            type="text"
+            id="input-student-id"
+            class="form-input"
+            placeholder="例：B12345678（選填）"
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            是否能參加？ <span class="required">*</span>
+          </label>
+          <div class="rsvp-toggle">
+            <label class="rsvp-option">
+              <input type="radio" name="attending" value="yes" required>
+              <div class="rsvp-option-label">
+                <span class="emoji">🎉</span>
+                <span class="text">我要參加！</span>
+              </div>
+            </label>
+            <label class="rsvp-option">
+              <input type="radio" name="attending" value="no">
+              <div class="rsvp-option-label">
+                <span class="emoji">😢</span>
+                <span class="text">無法參加</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group" id="dietary-group">
+          <label class="form-label" for="input-dietary">
+            備註 / 飲食禁忌
+          </label>
+          <textarea
+            id="input-dietary"
+            class="form-input"
+            placeholder="素食、過敏、其他備註..."
+          ></textarea>
+        </div>
+
+        <div class="note-box" id="notes-box" style="margin-bottom: 20px; display: none;">
+          <span class="note-icon">💡</span>
+          <span id="notes-text"></span>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btn-submit">
+          <span class="btn-text">送出回覆</span>
+          <span class="btn-loading">
+            <span class="spinner"></span>
+            送出中...
+          </span>
+        </button>
+      </form>
+
+      <!-- Result (shown after submit) -->
+      <div class="result-message" id="result-message">
+        <div class="result-icon" id="result-icon">🎉</div>
+        <div class="result-title" id="result-title">已收到你的回覆！</div>
+        <div class="result-desc" id="result-desc"></div>
+        <button class="btn-reset" id="btn-reset" type="button">
+          ↩ 修改回覆
+        </button>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <p>有問題請聯繫 <a href="#" id="contact-link">老師</a></p>
+    </footer>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
