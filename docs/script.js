@@ -1,19 +1,27 @@
-// ── Supabase client (from config.js) ──
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+let db = null;
 let countdownTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+  // 活動資訊一定先顯示（不依賴任何外部服務）
   renderEvent();
   startCountdown();
-  loadStats();
+
+  // Supabase 連線（僅用於統計和送出回覆）
+  try {
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    loadStats();
+  } catch (e) {
+    console.warn('Supabase 未載入，統計功能暫時不可用', e);
+  }
+
   setupForm();
 });
 
 // ══════════════════════════════
-//  Render event details
+//  Render event details (純本地，不需網路)
 // ══════════════════════════════
 function renderEvent() {
+  if (typeof EVENT === 'undefined') return;
   const ev = EVENT;
 
   document.getElementById('hero-title').textContent = ev.title || '導生宴';
@@ -54,12 +62,11 @@ function renderEvent() {
 }
 
 // ══════════════════════════════
-//  Countdown
+//  Countdown (純本地)
 // ══════════════════════════════
 function startCountdown() {
-  const ev = EVENT;
-  if (!ev.date) return;
-  const target = new Date(`${ev.date}T${ev.time || '18:00'}:00`);
+  if (typeof EVENT === 'undefined' || !EVENT.date) return;
+  const target = new Date(`${EVENT.date}T${EVENT.time || '18:00'}:00`);
 
   function tick() {
     const diff = Math.max(0, target - Date.now());
@@ -75,17 +82,22 @@ function startCountdown() {
 }
 
 // ══════════════════════════════
-//  Stats (from Supabase)
+//  Stats (需要 Supabase)
 // ══════════════════════════════
 async function loadStats() {
-  const { data, error } = await supabase.from('responses').select('attending');
-  if (error) { console.error('loadStats:', error); return; }
+  if (!db) return;
+  try {
+    const { data, error } = await db.from('responses').select('attending');
+    if (error) throw error;
 
-  const yes = data.filter(r => r.attending).length;
-  const no  = data.filter(r => !r.attending).length;
-  document.getElementById('stat-yes').textContent   = yes;
-  document.getElementById('stat-no').textContent    = no;
-  document.getElementById('stat-total').textContent = data.length;
+    const yes = data.filter(r => r.attending).length;
+    const no  = data.filter(r => !r.attending).length;
+    document.getElementById('stat-yes').textContent   = yes;
+    document.getElementById('stat-no').textContent    = no;
+    document.getElementById('stat-total').textContent = data.length;
+  } catch (e) {
+    console.warn('讀取統計失敗', e);
+  }
 }
 
 // ══════════════════════════════
@@ -107,13 +119,15 @@ function setupForm() {
     if (!name)  return shake(document.getElementById('input-name'));
     if (!radio) return shake(document.querySelector('.rsvp-choice'));
 
+    if (!db) { alert('系統尚未準備好，請稍後再試'); return; }
+
     const attending = radio.value === 'yes';
 
     btn.classList.add('loading');
     btn.disabled = true;
 
     try {
-      const { error } = await supabase.from('responses').upsert({
+      const { error } = await db.from('responses').upsert({
         name:          name,
         student_id:    studentId,
         attending:     attending,
